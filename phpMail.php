@@ -16,7 +16,7 @@
 
 class phpMail {
 
-    private $config, $to, $subject, $msg, $from, $name, $demoMode;
+    private $config, $to, $subject, $msg, $from, $name, $demoMode, $dualSend;
 
     function __construct() {
 
@@ -28,7 +28,7 @@ class phpMail {
                 'remoteip'      => $_SERVER['REMOTE_ADDR']
             ],
             'developer'         => [
-                'demoMode'      => 1,
+                'demoMode'      => 0,
                 'email'         =>'mail@domain.tld',
             ],
             'user'              => [
@@ -36,6 +36,8 @@ class phpMail {
                 'email'         => 'mail@domain.tld'
             ]
         ];
+        $this->demoMode = $this->config['developer']['demoMode'];
+        $this->dualSend = 0;
 
     }
 
@@ -48,8 +50,16 @@ class phpMail {
             $this->msg,
             $this->from,
             $this->name,
-            $this->demoMode
+            $this->demoMode,
+            $this->dualSend
         );
+
+    }
+
+    public function setDualSend($dualSend) {
+
+        $this->dualSend = $dualSend;
+        return $this;
 
     }
 
@@ -127,10 +137,10 @@ class phpMail {
             $msg .= "<b>Email   :</b> ".$_POST['useremail']."<br>";
             $msg .= "<b>Asunto   :</b> ".$_POST['subject']."<br>";
             $msg .= "<b>Mensaje :</b> ".$_POST['usermessage']."<br>";
+            $msg .= "<b>Enviado desde :</b> ".$domain."<br>";
+            $msg .= "<b>Fecha envio   :</b> ".$date;
 
         }
-        $msg .= "<b>Enviado desde :</b> ".$domain."<br>";
-        $msg .= "<b>Fecha envio   :</b> ".$date;
         $this->msg = $msg;
         return $this;
 
@@ -168,7 +178,7 @@ class phpMail {
 
         $status = 0;
         if ($this->config['captcha'] === 1) { $status = $this->checkGoogleReCaptcha(); }
-        if ($status === 0) {
+        if ($status === 0 || $this->demoMode === 1 || $this->dualSend === 1) {
 
             $params = $this->prepare();
             $status = (mail($params['to'],$params['subject'],$params['msg'],$params['headers'])) ? 0: 1;
