@@ -16,7 +16,7 @@
 
 class phpMail {
 
-    private $config, $to, $subject, $msg, $from, $name, $demoMode, $dualSend;
+    private $config, $to, $subject, $msg, $from, $name, $demoMode, $dualSend, $oldSend;
 
     function __construct() {
 
@@ -51,7 +51,8 @@ class phpMail {
             $this->from,
             $this->name,
             $this->demoMode,
-            $this->dualSend
+            $this->dualSend,
+            $this->oldSend
         );
 
     }
@@ -178,12 +179,14 @@ class phpMail {
 
         $status = 0;
         if ($this->config['captcha'] === 1) { $status = $this->checkGoogleReCaptcha(); }
-        if ($status === 0 || $this->demoMode === 1 || $this->dualSend === 1) {
+        if ($status === 0 || $this->demoMode === 1 || $this->dualSend === 1 && $this->oldSend === 0) {
 
             $params = $this->prepare();
             $status = (mail($params['to'],$params['subject'],$params['msg'],$params['headers'])) ? 0: 1;
 
         }
+
+        $this->oldSend = $status;
 
         switch ($status) {
 
